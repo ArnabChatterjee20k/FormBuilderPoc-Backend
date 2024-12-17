@@ -1,10 +1,13 @@
-from pydantic import BaseModel,field_serializer,model_serializer
+from pydantic import BaseModel, model_validator
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict,Union
 from enum import Enum
-
+import random
+import string
 
 # Enum to represent different field variants
+
+
 class FieldVariant(str, Enum):
     checkbox = "Checkbox"
     combobox = "Combobox"
@@ -34,24 +37,50 @@ class Field(BaseModel):
     options: Optional[List[str]] = None  # Corrected the type for options
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Pydantic model for Page
+
 class Page(BaseModel):
     title: Optional[str]
-    fields: List[Field]  # List of Field instances
+    fields: List[Field] | Dict[str,Field] # List of Field instances
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         arbitrary_types_allowed = True  # This allows arbitrary types like Enum
 
-# Pydantic model for Pages
 class Pages(BaseModel):  # Changed to inherit from BaseModel
     pages: List[Page]
 
+    class Config:
+        from_attributes = True
+
+class PagesDBModel(BaseModel):
+    pages:Dict[str,Field]
+
+    class Config:
+        from_attributes = True
 
 # Pydantic model for Form
 class Form(BaseModel):  # Changed to inherit from BaseModel
     name: str
     description: Optional[str] = None  # Corrected the Optional type here
     close_date: Optional[datetime] = None  # Corrected the Optional type here
+    pages: List[Page]
+
+    class Config:
+        from_attributes = True
+
+
+class Submission(BaseModel):
+    formId: Union[int,str]
+    data: Dict[str, str]
+
+
+def transform_to_kv(data):
+    fields = {}
+    for field in data:
+        random_suffix = "".join(random.choices(string.ascii_letters, k=10))
+        random_name = f"{field.get('name')}_{random_suffix}"
+        fields[random_name] = field
+    return fields

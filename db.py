@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import create_engine,text,Integer,String,DateTime,ForeignKey
+from sqlalchemy import create_engine,text,Integer,String,DateTime,ForeignKey,Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import sessionmaker,DeclarativeBase
 from sqlalchemy.orm import mapped_column,Mapped,relationship
@@ -16,9 +16,12 @@ class Form(Base):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     name = mapped_column(String(100), nullable=False)
     description = mapped_column(String(500), nullable=True)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
+    created_at = mapped_column(DateTime, default=datetime.n)
     close_date = mapped_column(DateTime, nullable=True)
-
+    
+    auth_required = mapped_column(Boolean, nullable=False,default=False)
+    ip_required = mapped_column(Boolean, nullable=False,default=False)
+    discord_notification = mapped_column(Boolean, nullable=False,default=False)
     pages = relationship('Page', back_populates='form', cascade="all, delete-orphan")
 
     submissions = relationship('FormSubmission', back_populates='form', cascade="all, delete-orphan")
@@ -50,7 +53,7 @@ class FormSubmission(Base):
     form_id = mapped_column(Integer, ForeignKey('forms.id'), nullable=False)
     submitted_at = mapped_column(DateTime, default=datetime.now)
     submission_data = mapped_column(JSONB, nullable=False)  # JSONB for submitted form data
-
+    user_id = mapped_column(String,nullable=True)
     form = relationship('Form', back_populates='submissions')
 
     def __repr__(self):
